@@ -185,7 +185,7 @@ const MainAppContent: React.FC = () => {
   ].includes(currentScreen);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#bfe8e6] via-[#ceeeed] to-[#c7eae8] dark:bg-slate-950 flex flex-col font-sans transition-colors selection:bg-[#00B4B6] selection:text-white">
+    <div className="min-h-screen bg-[#cbeae8] dark:bg-slate-950 flex flex-col font-sans transition-colors selection:bg-[#00B4B6] selection:text-white">
       {/* App Container */}
       <PhoneFrame>
         {/* Dynamic Screen Header */}

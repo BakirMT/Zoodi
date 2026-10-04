@@ -36,7 +36,7 @@ export const SplashScreen: React.FC = () => {
   return (
     <div
       onClick={startExit}
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-b from-[#daf1f0] via-[#e4f5f4] to-[#edf7f7] dark:bg-slate-950 cursor-pointer select-none transition-all duration-[2000ms] ease-out ${
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-[#dcf0ef] dark:bg-slate-950 cursor-pointer select-none transition-all duration-[2000ms] ease-out ${
         isExiting
           ? 'opacity-0 backdrop-blur-2xl pointer-events-none scale-105'
           : 'opacity-100 backdrop-blur-none scale-100'
