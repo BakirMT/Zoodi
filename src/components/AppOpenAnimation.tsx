@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { ZoodiLogo } from '../components/ZoodiLogo';
+import { ZoodiLogo } from './ZoodiLogo';
 
-export const SplashScreen: React.FC = () => {
-  const { navigate } = useApp();
+export const AppOpenAnimation: React.FC = () => {
+  const { isOpenAnimationActive, dismissOpenAnimation } = useApp();
   const [hasEntered, setHasEntered] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    // 1. Logo "coming in" entrance animation on open
+    if (!isOpenAnimationActive) return;
+
+    // 1. Logo "coming in" entrance animation when opened
     const enterTimer = setTimeout(() => {
       setHasEntered(true);
     }, 60);
 
-    // 2. Hold, then start the slow 2-second blur transition to home
+    // 2. Hold, then start the slow 2-second blur transition into home
     const exitTimer = setTimeout(() => {
       startExit();
     }, 1800);
@@ -22,19 +24,25 @@ export const SplashScreen: React.FC = () => {
       clearTimeout(enterTimer);
       clearTimeout(exitTimer);
     };
-  }, []);
+  }, [isOpenAnimationActive]);
 
   const startExit = () => {
     if (isExiting) return;
     setIsExiting(true);
-    // 2 seconds slow cinematic blur fade into home
+    // 2-second slow cinematic blur fade into home
     setTimeout(() => {
-      navigate('home');
+      dismissOpenAnimation();
+      setIsExiting(false);
+      setHasEntered(false);
     }, 2000);
   };
 
+  if (!isOpenAnimationActive) return null;
+
   return (
     <div
+      role="dialog"
+      aria-label="App Launching"
       onClick={startExit}
       className={`fixed inset-0 z-50 flex items-center justify-center bg-white cursor-pointer select-none transition-all duration-[2000ms] ease-out ${
         isExiting
@@ -46,6 +54,7 @@ export const SplashScreen: React.FC = () => {
         WebkitBackdropFilter: isExiting ? 'blur(24px)' : 'none',
       }}
     >
+      {/* Centered shop logo: smooth incoming animation on open, slow 2-second blur on exit */}
       <div
         className={`flex flex-col items-center justify-center p-6 transform transition-all ease-out ${
           isExiting

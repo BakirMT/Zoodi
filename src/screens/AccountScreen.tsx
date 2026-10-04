@@ -13,12 +13,14 @@ import {
   X,
   Edit3,
   ShieldCheck,
+  TicketPercent,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useAdmin } from '../context/AdminContext';
 
 export const AccountScreen: React.FC = () => {
-  const { user, orders, wishlistIds, navigate, logout, topUpWallet, updateProfile } = useApp();
+  const { user, orders, wishlistIds, navigate, logout, topUpWallet, updateProfile, coupons } =
+    useApp();
   const { setIsStoreMode } = useAdmin();
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState('500');
@@ -43,6 +45,13 @@ export const AccountScreen: React.FC = () => {
 
   const menuItems = [
     { label: 'My Orders', screen: 'orders', icon: Package, count: orders.length },
+    {
+      label: 'Coupons & Discounts',
+      screen: 'coupons',
+      icon: TicketPercent,
+      count: coupons.length,
+      badge: 'Offers',
+    },
     { label: 'Addresses', screen: 'addresses', icon: MapPin },
     { label: 'Wishlist', screen: 'wishlist', icon: Heart, count: wishlistIds.length },
     { label: 'Compare Products', screen: 'compare', icon: Tag },

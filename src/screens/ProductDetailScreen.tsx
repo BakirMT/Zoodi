@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Star,
   Heart,
@@ -12,13 +12,20 @@ import {
   ShieldCheck,
   Scale,
   X,
+  ChevronRight,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { ProductImage } from '../components/ProductImage';
+import { ProductCard } from '../components/ProductCard';
+import { ProductReviewsSection } from '../components/ProductReviewsSection';
+import { SizeGuideModal } from '../components/SizeGuideModal';
 
 export const ProductDetailScreen: React.FC = () => {
   const {
     selectedProduct,
+    products,
+    setSelectedProduct,
+    setSelectedCategory,
     addToCart,
     toggleWishlist,
     isInWishlist,
@@ -36,6 +43,41 @@ export const ProductDetailScreen: React.FC = () => {
   const [showSizeGuide, setShowSizeGuide] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'details' | 'specs' | 'reviews'>('details');
   const [activeImageIdx, setActiveImageIdx] = useState<number>(0);
+
+  // Synchronize state when selected product switches
+  useEffect(() => {
+    if (product) {
+      setSelectedColor(product.color || 'Yellow');
+      setSelectedSize(product.size || (product.sizes && product.sizes[0]) || 'M');
+      setActiveImageIdx(0);
+      setQuantity(1);
+    }
+  }, [product?.id]);
+
+  // Compute related items based on category, subcategory, and popularity
+  const relatedProducts = useMemo(() => {
+    if (!product) return [];
+    // 1. Same category and same subcategory
+    const sameSub = products.filter(
+      (p) =>
+        p.id !== product.id &&
+        p.category === product.category &&
+        p.subcategory === product.subcategory
+    );
+    // 2. Same category
+    const sameCat = products.filter(
+      (p) =>
+        p.id !== product.id &&
+        p.category === product.category &&
+        p.subcategory !== product.subcategory
+    );
+    // 3. Other popular items
+    const others = products.filter(
+      (p) => p.id !== product.id && p.category !== product.category
+    );
+
+    return [...sameSub, ...sameCat, ...others].slice(0, 6);
+  }, [products, product]);
 
   if (!product) {
     return (
@@ -168,12 +210,18 @@ export const ProductDetailScreen: React.FC = () => {
           </h1>
 
           {/* Rating */}
-          <div className="flex items-center gap-2 mt-1.5">
-            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 text-xs font-bold">
+          <div
+            onClick={() => {
+              document.getElementById('product-reviews-section')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="flex items-center gap-2 mt-1.5 cursor-pointer group"
+            title="Click to view customer ratings & reviews"
+          >
+            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 text-xs font-bold group-hover:bg-amber-100 dark:group-hover:bg-amber-900/50 transition-colors">
               <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
               <span>{product.rating}</span>
             </div>
-            <span className="text-xs text-slate-500 dark:text-slate-400">
+            <span className="text-xs text-slate-500 dark:text-slate-400 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors underline decoration-dotted">
               ({product.reviewsCount.toLocaleString()} reviews)
             </span>
             <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold ml-auto">
@@ -336,6 +384,56 @@ export const ProductDetailScreen: React.FC = () => {
             <span className="text-[9px] text-slate-400">Verified seller</span>
           </div>
         </div>
+
+        {/* Customer Ratings & Reviews Section */}
+        <div id="product-reviews-section">
+          <ProductReviewsSection product={product} />
+        </div>
+
+        {/* Related Products Section below Product Review */}
+        {relatedProducts.length > 0 && (
+          <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-pink-500" />
+                  <span>Related Products</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-50 dark:bg-pink-950/60 text-pink-600 dark:text-pink-400">
+                    {product.category}
+                  </span>
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Customers who viewed this item also loved these
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCategory(product.category);
+                  navigate('category_listing', { category: product.category });
+                }}
+                className="text-xs font-bold text-pink-600 dark:text-pink-400 hover:text-pink-700 flex items-center gap-0.5 transition-colors cursor-pointer"
+              >
+                <span>View All</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+              {relatedProducts.map((relProduct) => (
+                <ProductCard
+                  key={relProduct.id}
+                  product={relProduct}
+                  onSelect={() => {
+                    setSelectedProduct(relProduct);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Sticky Bottom Action Bar above BottomNav */}
@@ -365,73 +463,12 @@ export const ProductDetailScreen: React.FC = () => {
 
       {/* Size Guide Modal */}
       {showSizeGuide && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 w-full max-w-sm border border-slate-200 dark:border-slate-800 shadow-xl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Standard Size Guide
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowSizeGuide(false)}
-                className="p-1 text-slate-400"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="py-4 overflow-x-auto text-xs">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-slate-200 dark:border-slate-700 text-slate-400">
-                    <th className="py-2">Size</th>
-                    <th className="py-2">Bust (in)</th>
-                    <th className="py-2">Waist (in)</th>
-                    <th className="py-2">Hip (in)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
-                  <tr>
-                    <td className="py-2 font-bold">XS</td>
-                    <td>32</td>
-                    <td>26</td>
-                    <td>35</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 font-bold">S</td>
-                    <td>34</td>
-                    <td>28</td>
-                    <td>37</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 font-bold">M</td>
-                    <td>36</td>
-                    <td>30</td>
-                    <td>39</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 font-bold">L</td>
-                    <td>38</td>
-                    <td>32</td>
-                    <td>41</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 font-bold">XL</td>
-                    <td>40</td>
-                    <td>34</td>
-                    <td>43</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowSizeGuide(false)}
-              className="w-full py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 text-white text-xs font-semibold"
-            >
-              Close
-            </button>
-          </div>
-        </div>
+        <SizeGuideModal
+          product={product}
+          selectedSize={selectedSize}
+          onSelectSize={(newSize) => setSelectedSize(newSize)}
+          onClose={() => setShowSizeGuide(false)}
+        />
       )}
     </div>
   );

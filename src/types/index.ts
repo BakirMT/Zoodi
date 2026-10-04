@@ -1,3 +1,17 @@
+export interface ProductReview {
+  id: string;
+  productId: string;
+  userName: string;
+  userAvatar?: string;
+  rating: number; // 1 to 5
+  title?: string;
+  comment: string;
+  date: string;
+  verifiedPurchase?: boolean;
+  helpfulCount?: number;
+  images?: string[];
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -105,6 +119,20 @@ export interface UserProfile {
   walletBalance: number;
 }
 
+export interface Coupon {
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+  discountType: 'flat' | 'percent';
+  discountValue: number;
+  minOrderValue: number;
+  maxDiscount?: number;
+  expiryDate: string;
+  tag?: string;
+  applicableCategory?: string;
+}
+
 export type ScreenId =
   | 'splash'
   | 'login'
@@ -124,6 +152,7 @@ export type ScreenId =
   | 'addresses'
   | 'wishlist'
   | 'compare'
+  | 'coupons'
   | 'help'
   | 'settings';
 

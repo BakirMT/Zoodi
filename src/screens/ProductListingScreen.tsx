@@ -389,9 +389,9 @@ export const ProductListingScreen: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-3 gap-2">
             {filteredProducts.map((prod) => (
-              <ProductCard key={prod.id} product={prod} />
+              <ProductCard key={prod.id} product={prod} compact />
             ))}
           </div>
         )}

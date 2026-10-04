@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { Trash2, ArrowRight, Tag, ShoppingBag, Plus, Minus, ArrowLeft } from 'lucide-react';
+import {
+  Trash2,
+  ArrowRight,
+  Tag,
+  ShoppingBag,
+  Plus,
+  Minus,
+  ArrowLeft,
+  TicketPercent,
+  ChevronRight,
+  Check,
+} from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { ProductImage } from '../components/ProductImage';
 
@@ -13,6 +24,8 @@ export const CartScreen: React.FC = () => {
     cartDeliveryCharge,
     cartTotal,
     couponCode,
+    appliedCouponDiscount,
+    coupons,
     applyCoupon,
     removeCoupon,
     navigate,
@@ -119,43 +132,92 @@ export const CartScreen: React.FC = () => {
         ))}
       </div>
 
-      {/* Coupon / Promo Code Input */}
-      <div className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xs">
-        {couponCode ? (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Tag className="w-4 h-4 text-pink-500" />
-              <span className="text-xs font-bold text-slate-900 dark:text-white">
-                Coupon Applied: <span className="text-pink-500">{couponCode}</span>
-              </span>
+      {/* Coupons & Discounts Card */}
+      <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xs flex flex-col gap-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-pink-50 dark:bg-pink-950/40 text-pink-500 flex items-center justify-center shrink-0">
+              <TicketPercent className="w-4 h-4" />
             </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white">Coupons & Discounts</h4>
+              <p className="text-[10px] text-slate-400">Save extra with store promo codes</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => navigate('coupons')}
+            className="text-xs font-bold text-[#DF1951] hover:underline flex items-center gap-0.5"
+          >
+            <span>View All ({coupons.length})</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {couponCode ? (
+          <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                  '{couponCode}' Applied
+                </span>
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                  You saved ₹{appliedCouponDiscount.toLocaleString('en-IN')} with this coupon
+                </span>
+              </div>
+            </div>
+
             <button
               type="button"
               onClick={removeCoupon}
-              className="text-xs font-semibold text-rose-500 hover:underline"
+              className="text-xs font-bold text-rose-500 hover:text-rose-700 underline px-1 shrink-0"
             >
               Remove
             </button>
           </div>
         ) : (
-          <form onSubmit={handleApplyCoupon} className="flex gap-2">
-            <div className="relative flex-1">
-              <Tag className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-              <input
-                type="text"
-                value={inputCoupon}
-                onChange={(e) => setInputCoupon(e.target.value)}
-                placeholder="Enter promo code (e.g. ZOODI50)"
-                className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-pink-500"
-              />
+          <>
+            <form onSubmit={handleApplyCoupon} className="flex gap-2">
+              <div className="relative flex-1">
+                <Tag className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
+                <input
+                  type="text"
+                  value={inputCoupon}
+                  onChange={(e) => setInputCoupon(e.target.value.toUpperCase())}
+                  placeholder="Enter promo code (e.g. ZOODI50)"
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white uppercase placeholder:normal-case placeholder:text-slate-400 focus:outline-none focus:border-pink-500"
+                />
+              </div>
+              <button
+                type="submit"
+                className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 text-white font-bold text-xs hover:bg-slate-800 dark:hover:bg-slate-700 active:scale-95 transition-all shadow-xs shrink-0"
+              >
+                Apply
+              </button>
+            </form>
+
+            {/* Quick 1-tap coupon suggestions */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5">
+              {coupons.slice(0, 3).map((cp) => (
+                <button
+                  key={cp.id}
+                  type="button"
+                  onClick={() => applyCoupon(cp.code)}
+                  className="px-2.5 py-1 rounded-lg bg-pink-50/80 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-900/40 text-[10px] font-bold text-pink-600 dark:text-pink-400 hover:bg-pink-100 flex items-center gap-1 shrink-0 active:scale-95 transition-all"
+                >
+                  <Tag className="w-2.5 h-2.5" />
+                  <span>{cp.code}</span>
+                  <span className="text-slate-400 font-normal">
+                    ({cp.discountType === 'percent' ? `${cp.discountValue}%` : `₹${cp.discountValue}`} off)
+                  </span>
+                </button>
+              ))}
             </div>
-            <button
-              type="submit"
-              className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 text-white font-semibold text-xs hover:bg-slate-800 dark:hover:bg-slate-700"
-            >
-              Apply
-            </button>
-          </form>
+          </>
         )}
       </div>
 
@@ -172,9 +234,19 @@ export const CartScreen: React.FC = () => {
           </span>
         </div>
 
-        <div className="flex justify-between text-xs text-emerald-600 dark:text-emerald-400">
-          <span>Discount</span>
-          <span className="font-semibold">-₹{cartDiscount.toLocaleString('en-IN')}</span>
+        <div className="flex justify-between text-xs">
+          <span className="text-slate-600 dark:text-slate-400">
+            Discount {couponCode ? `(${couponCode})` : ''}
+          </span>
+          <span
+            className={`font-semibold ${
+              cartDiscount > 0
+                ? 'text-emerald-600 dark:text-emerald-400'
+                : 'text-slate-900 dark:text-white'
+            }`}
+          >
+            {cartDiscount > 0 ? `-₹${cartDiscount.toLocaleString('en-IN')}` : '₹0'}
+          </span>
         </div>
 
         <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400">

@@ -6,6 +6,7 @@ import { PhoneFrame } from './components/PhoneFrame';
 import { TopBar } from './components/TopBar';
 import { BottomNav } from './components/BottomNav';
 import { Toast } from './components/Toast';
+import { AppOpenAnimation } from './components/AppOpenAnimation';
 
 // Screens
 import { SplashScreen } from './screens/SplashScreen';
@@ -26,11 +27,12 @@ import { AccountScreen } from './screens/AccountScreen';
 import { AddressesScreen } from './screens/AddressesScreen';
 import { WishlistScreen } from './screens/WishlistScreen';
 import { CompareScreen } from './screens/CompareScreen';
+import { CouponsScreen } from './screens/CouponsScreen';
 import { HelpScreen } from './screens/HelpScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 
 const MainAppContent: React.FC = () => {
-  const { currentScreen, selectedCategory, cart, wishlistIds, navigate } = useApp();
+  const { currentScreen, selectedCategory, cart, wishlistIds, navigate, products } = useApp();
   const { isStoreMode } = useAdmin();
 
   // If in Admin Mode, render the complete Admin Portal
@@ -82,6 +84,8 @@ const MainAppContent: React.FC = () => {
         return <WishlistScreen />;
       case 'compare':
         return <CompareScreen />;
+      case 'coupons':
+        return <CouponsScreen />;
       case 'help':
         return <HelpScreen />;
       case 'settings':
@@ -105,14 +109,21 @@ const MainAppContent: React.FC = () => {
       case 'categories':
         return <TopBar title="Categories" showBack />;
 
-      case 'category_listing':
+      case 'category_listing': {
+        const catCount =
+          selectedCategory === 'All'
+            ? products.length
+            : products.filter(
+                (p) => p.category.toLowerCase() === (selectedCategory || 'Women').toLowerCase()
+              ).length;
         return (
           <TopBar
-            title={selectedCategory || 'Women'}
-            subtitle="1283 Products"
+            title={selectedCategory === 'All' ? 'All Products' : selectedCategory || 'Women'}
+            subtitle={`${catCount} Products`}
             showBack
           />
         );
+      }
 
       case 'product_detail':
         return <TopBar showBack />;
@@ -150,6 +161,9 @@ const MainAppContent: React.FC = () => {
       case 'compare':
         return <TopBar title="Compare Products" showBack />;
 
+      case 'coupons':
+        return <TopBar title="Coupons & Discounts" showBack />;
+
       case 'help':
         return <TopBar title="Help & Support" showBack />;
 
@@ -184,6 +198,9 @@ const MainAppContent: React.FC = () => {
         {showBottomNav && (
           <BottomNav onOpenMoreMenu={() => navigate('settings')} />
         )}
+
+        {/* App Open Launch Animation (Runs every time app opens) */}
+        <AppOpenAnimation />
       </PhoneFrame>
 
       {/* Global Interactive Toast Alerts */}

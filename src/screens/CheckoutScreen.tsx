@@ -11,6 +11,8 @@ import {
   Edit2,
   ChevronRight,
   Plus,
+  Tag,
+  TicketPercent,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -18,6 +20,11 @@ export const CheckoutScreen: React.FC = () => {
   const {
     cart,
     cartTotal,
+    cartSubtotal,
+    cartDiscount,
+    cartDeliveryCharge,
+    couponCode,
+    appliedCouponDiscount,
     addresses,
     selectedAddressId,
     setSelectedAddressId,
@@ -317,6 +324,77 @@ export const CheckoutScreen: React.FC = () => {
             </div>
             <Building className="w-4 h-4 text-slate-400" />
           </label>
+        </div>
+      </div>
+
+      {/* Order Summary & Applied Coupon Breakdown */}
+      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xs flex flex-col gap-2.5">
+        <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-slate-800">
+          <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+            Order Summary ({cart.length} items)
+          </h3>
+          <button
+            type="button"
+            onClick={() => navigate('coupons')}
+            className="text-[11px] font-bold text-[#DF1951] hover:underline flex items-center gap-0.5"
+          >
+            <TicketPercent className="w-3.5 h-3.5" />
+            <span>{couponCode ? 'Change Coupon' : 'Apply Coupon'}</span>
+          </button>
+        </div>
+
+        {couponCode && (
+          <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 flex items-center justify-between text-xs">
+            <span className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+              Coupon Applied: '{couponCode}'
+            </span>
+            <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
+              -₹{appliedCouponDiscount.toLocaleString('en-IN')}
+            </span>
+          </div>
+        )}
+
+        <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400">
+          <span>Items Total</span>
+          <span className="font-semibold text-slate-900 dark:text-white">
+            ₹{cartSubtotal.toLocaleString('en-IN')}
+          </span>
+        </div>
+
+        <div className="flex justify-between text-xs">
+          <span className="text-slate-600 dark:text-slate-400">
+            Coupon Discount {couponCode ? `(${couponCode})` : ''}
+          </span>
+          <span
+            className={`font-semibold ${
+              cartDiscount > 0
+                ? 'text-emerald-600 dark:text-emerald-400'
+                : 'text-slate-900 dark:text-white'
+            }`}
+          >
+            {cartDiscount > 0 ? `-₹${cartDiscount.toLocaleString('en-IN')}` : '₹0'}
+          </span>
+        </div>
+
+        <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400">
+          <span>Delivery Charge</span>
+          <span className="font-semibold">
+            {deliveryOption === 'Express' ? (
+              <span>₹49 (Express)</span>
+            ) : cartDeliveryCharge === 0 ? (
+              <span className="text-emerald-600 dark:text-emerald-400 font-bold">FREE</span>
+            ) : (
+              <span>₹{cartDeliveryCharge}</span>
+            )}
+          </span>
+        </div>
+
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between text-sm font-bold text-slate-900 dark:text-white">
+          <span>To Pay</span>
+          <span className="text-base text-pink-600 dark:text-pink-400 font-black">
+            ₹{finalAmount.toLocaleString('en-IN')}
+          </span>
         </div>
       </div>
 

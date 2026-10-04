@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Check,
   X,
+  Sparkles,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -28,6 +29,7 @@ export const SettingsScreen: React.FC = () => {
     cacheSizeMB,
     logout,
     showToast,
+    replayOpenAnimation,
   } = useApp();
 
   const [showAccountModal, setShowAccountModal] = useState(false);
@@ -180,6 +182,28 @@ export const SettingsScreen: React.FC = () => {
             <h3 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white">
               Privacy & Security
             </h3>
+          </div>
+          <ChevronRight className="w-4 h-4 text-slate-400" />
+        </div>
+
+        {/* Play App Open Animation */}
+        <div
+          onClick={() => {
+            replayOpenAnimation();
+            showToast('Playing ZOODI open animation', 'info');
+          }}
+          className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xs flex items-center justify-between cursor-pointer hover:border-pink-500/40 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-pink-50 dark:bg-pink-950/40 flex items-center justify-center text-pink-500">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white">
+                Replay Open Animation
+              </h3>
+              <p className="text-[11px] text-slate-400">Preview the app launch animation</p>
+            </div>
           </div>
           <ChevronRight className="w-4 h-4 text-slate-400" />
         </div>

@@ -8,6 +8,8 @@ import {
   UserProfile,
   ScreenId,
   SortOption,
+  Coupon,
+  ProductReview,
 } from '../types';
 import {
   INITIAL_USER,
@@ -16,7 +18,9 @@ import {
   INITIAL_CART,
   INITIAL_ORDERS,
   INITIAL_NOTIFICATIONS,
+  INITIAL_COUPONS,
 } from '../data/mockData';
+import { INITIAL_REVIEWS } from '../data/reviewsData';
 
 interface AppContextType {
   // Navigation
@@ -47,6 +51,10 @@ interface AppContextType {
   setSelectedCategory: (cat: string) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  searchHistory: string[];
+  addToSearchHistory: (query: string) => void;
+  removeFromSearchHistory: (query: string) => void;
+  clearSearchHistory: () => void;
   selectedSubcategory: string;
   setSelectedSubcategory: (sub: string) => void;
   sortBy: SortOption;
@@ -56,6 +64,18 @@ interface AppContextType {
   addProduct: (product: Omit<Product, 'id'>) => void;
   updateProduct: (product: Product) => void;
   deleteProduct: (id: string) => void;
+
+  // Reviews & Ratings
+  reviews: ProductReview[];
+  getProductReviews: (productId: string) => ProductReview[];
+  submitProductReview: (
+    productId: string,
+    rating: number,
+    comment: string,
+    title?: string,
+    images?: string[]
+  ) => void;
+  toggleReviewHelpful: (reviewId: string) => void;
 
   // Cart
   cart: CartItem[];
@@ -69,6 +89,8 @@ interface AppContextType {
   cartTotal: number;
   couponCode: string;
   appliedCouponDiscount: number;
+  coupons: Coupon[];
+  appliedCoupon: Coupon | null;
   applyCoupon: (code: string) => { success: boolean; message: string };
   removeCoupon: () => void;
 
@@ -122,6 +144,11 @@ interface AppContextType {
   // Toast
   toast: { message: string; type: 'success' | 'info' | 'error' } | null;
   showToast: (message: string, type?: 'success' | 'info' | 'error') => void;
+
+  // Open Animation
+  isOpenAnimationActive: boolean;
+  replayOpenAnimation: () => void;
+  dismissOpenAnimation: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -139,6 +166,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return localStorage.getItem('zoodi_dark') === 'true';
   });
   const [viewMode, setViewMode] = useState<'mobile' | 'responsive'>('mobile');
+
+  // Open Animation state - runs every time the app opens or reloads
+  const [isOpenAnimationActive, setIsOpenAnimationActive] = useState<boolean>(true);
+  const replayOpenAnimation = () => {
+    setIsOpenAnimationActive(true);
+  };
+  const dismissOpenAnimation = () => {
+    setIsOpenAnimationActive(false);
+  };
 
   // Sync dark class on html root & body
   useEffect(() => {
@@ -191,8 +227,148 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedCategory, setSelectedCategory] = useState<string>('Women');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchHistory, setSearchHistory] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('zoodi_search_history');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to parse search history from localStorage', e);
+    }
+    return ['Silk Sarees', 'Running Shoes', 'Oversized T-Shirts', 'Leather Handbags', 'Casual Kurtis'];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('zoodi_search_history', JSON.stringify(searchHistory));
+    } catch (e) {
+      console.warn('Failed to save search history', e);
+    }
+  }, [searchHistory]);
+
+  const addToSearchHistory = (query: string) => {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    setSearchHistory((prev) => {
+      const filtered = prev.filter((item) => item.toLowerCase() !== trimmed.toLowerCase());
+      return [trimmed, ...filtered].slice(0, 10);
+    });
+  };
+
+  const removeFromSearchHistory = (query: string) => {
+    setSearchHistory((prev) => prev.filter((item) => item.toLowerCase() !== query.toLowerCase()));
+  };
+
+  const clearSearchHistory = () => {
+    setSearchHistory([]);
+    try {
+      localStorage.setItem('zoodi_search_history', JSON.stringify([]));
+    } catch (e) {
+      // ignore
+    }
+  };
+
   const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(INITIAL_PRODUCTS[0]);
+
+  // Reviews state with localStorage persistence
+  const [reviews, setReviews] = useState<ProductReview[]>(() => {
+    try {
+      const saved = localStorage.getItem('zoodi_reviews');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load reviews from localStorage', e);
+    }
+    return INITIAL_REVIEWS;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('zoodi_reviews', JSON.stringify(reviews));
+    } catch (e) {
+      console.warn('Failed to persist reviews to localStorage', e);
+    }
+  }, [reviews]);
+
+  const getProductReviews = (productId: string) => {
+    return reviews.filter((r) => r.productId === productId);
+  };
+
+  const submitProductReview = (
+    productId: string,
+    rating: number,
+    comment: string,
+    title?: string,
+    images?: string[]
+  ) => {
+    const newRev: ProductReview = {
+      id: `rev_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      productId,
+      userName: user.name || 'Zoodi Shopper',
+      userAvatar: user.avatar,
+      rating,
+      title: title?.trim() || (rating === 5 ? 'Excellent product!' : rating >= 4 ? 'Good purchase' : 'Product review'),
+      comment: comment.trim(),
+      date: 'Just now',
+      verifiedPurchase: true,
+      helpfulCount: 0,
+      images: images && images.length > 0 ? images : undefined,
+    };
+
+    const updatedReviews = [newRev, ...reviews];
+    setReviews(updatedReviews);
+
+    // Calculate new average rating & count for this product
+    const productReviews = updatedReviews.filter((r) => r.productId === productId);
+    const avgRating = Number(
+      (productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length).toFixed(1)
+    );
+    const count = productReviews.length;
+
+    // Update in products list
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === productId
+          ? {
+              ...p,
+              rating: avgRating,
+              reviewsCount: Math.max(p.reviewsCount + 1, count),
+            }
+          : p
+      )
+    );
+
+    // Update in selectedProduct if matching
+    if (selectedProduct && selectedProduct.id === productId) {
+      setSelectedProduct((prev) =>
+        prev
+          ? {
+              ...prev,
+              rating: avgRating,
+              reviewsCount: Math.max(prev.reviewsCount + 1, count),
+            }
+          : null
+      );
+    }
+
+    showToast('Review submitted successfully! Thank you for your feedback.', 'success');
+  };
+
+  const toggleReviewHelpful = (reviewId: string) => {
+    setReviews((prev) =>
+      prev.map((r) => (r.id === reviewId ? { ...r, helpfulCount: (r.helpfulCount || 0) + 1 } : r))
+    );
+    showToast('Marked review as helpful!');
+  };
 
   // Wishlist
   const [wishlistIds, setWishlistIds] = useState<string[]>(() => {
@@ -202,13 +378,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       : ['prod_1', 'prod_8', 'prod_10', 'prod_5', 'prod_11', 'prod_6'];
   });
 
-  // Cart
+  // Cart persistent state with safe localStorage initialization
   const [cart, setCart] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem('zoodi_cart');
-    return saved ? JSON.parse(saved) : INITIAL_CART;
+    try {
+      const saved = localStorage.getItem('zoodi_cart');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load persistent cart from localStorage', e);
+    }
+    return INITIAL_CART;
   });
+  const [coupons, setCoupons] = useState<Coupon[]>(INITIAL_COUPONS);
   const [couponCode, setCouponCode] = useState<string>('');
-  const [appliedCouponDiscount, setAppliedCouponDiscount] = useState<number>(1200);
+  const [appliedCouponDiscount, setAppliedCouponDiscount] = useState<number>(0);
+  const appliedCoupon =
+    coupons.find((c) => c.code.toUpperCase() === couponCode.toUpperCase()) || null;
 
   // Addresses
   const [addresses, setAddresses] = useState<Address[]>(() => {
@@ -248,8 +437,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [products]);
 
   useEffect(() => {
-    localStorage.setItem('zoodi_cart', JSON.stringify(cart));
+    try {
+      localStorage.setItem('zoodi_cart', JSON.stringify(cart));
+    } catch (e) {
+      console.warn('Failed to persist cart to localStorage', e);
+    }
   }, [cart]);
+
+  // Synchronize cart state across browser tabs/windows
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'zoodi_cart' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) {
+            setCart(parsed);
+          }
+        } catch (err) {
+          console.warn('Failed to parse cart update from storage event', err);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('zoodi_wishlist', JSON.stringify(wishlistIds));
@@ -424,35 +636,64 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Cart totals calculation
-  const cartSubtotal = cart.reduce((acc, item) => acc + item.originalPrice * item.quantity, 0);
-  const cartRealPrice = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  // Default discount difference or coupon
-  const cartDiscount = Math.max(0, cartSubtotal - cartRealPrice + appliedCouponDiscount);
-  const cartDeliveryCharge = cart.length === 0 || cartRealPrice > 999 ? 0 : 49;
+  // Subtotal is the sum of product prices in the cart
+  const cartSubtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+
+  // Discount ONLY comes when coupon is added; if no coupon added, exactly 0 rupee!
+  const cartDiscount = couponCode ? appliedCouponDiscount : 0;
+
+  const isFreeShipCoupon = couponCode.toUpperCase() === 'FREESHIP';
+  const cartDeliveryCharge =
+    cart.length === 0 || cartSubtotal > 999 || isFreeShipCoupon ? 0 : 49;
   const cartTotal = Math.max(0, cartSubtotal - cartDiscount + cartDeliveryCharge);
 
   const applyCoupon = (code: string) => {
     const trimmed = code.trim().toUpperCase();
+    if (!trimmed) {
+      showToast('Please enter a coupon code.', 'error');
+      return { success: false, message: 'Please enter a coupon code' };
+    }
+    const matched = coupons.find((c) => c.code.toUpperCase() === trimmed);
+    if (matched) {
+      if (cartSubtotal > 0 && cartSubtotal < matched.minOrderValue) {
+        showToast(
+          `Minimum order of ₹${matched.minOrderValue} required for ${matched.code}`,
+          'error'
+        );
+        return {
+          success: false,
+          message: `Minimum order value of ₹${matched.minOrderValue} required`,
+        };
+      }
+      let disc = 0;
+      if (matched.discountType === 'percent') {
+        const raw = Math.round((cartSubtotal * matched.discountValue) / 100);
+        disc = matched.maxDiscount ? Math.min(raw, matched.maxDiscount) : raw;
+      } else {
+        disc = matched.discountValue;
+      }
+      setCouponCode(matched.code);
+      setAppliedCouponDiscount(disc);
+      showToast(`Coupon ${matched.code} applied! Saved ₹${disc}.`, 'success');
+      return { success: true, message: `Coupon ${matched.code} applied successfully!` };
+    }
+
     if (trimmed === 'ZOODI50' || trimmed === 'FLAT50') {
-      setCouponCode(trimmed);
-      setAppliedCouponDiscount(1500);
-      showToast('Coupon ZOODI50 applied! Flat ₹1500 OFF.');
+      const disc = Math.min(1500, Math.round(cartSubtotal * 0.5));
+      setCouponCode('ZOODI50');
+      setAppliedCouponDiscount(disc);
+      showToast(`Coupon ZOODI50 applied! ₹${disc} OFF.`, 'success');
       return { success: true, message: 'Coupon applied successfully!' };
     }
-    if (trimmed === 'WELCOME100') {
-      setCouponCode(trimmed);
-      setAppliedCouponDiscount(500);
-      showToast('Coupon WELCOME100 applied! ₹500 OFF.');
-      return { success: true, message: 'Coupon applied successfully!' };
-    }
-    showToast('Invalid coupon code. Try ZOODI50 or WELCOME100', 'error');
+
+    showToast('Invalid coupon code. Try ZOODI50, WELCOME100, or FESTIVE30', 'error');
     return { success: false, message: 'Invalid or expired coupon code' };
   };
 
   const removeCoupon = () => {
     setCouponCode('');
-    setAppliedCouponDiscount(1200);
-    showToast('Coupon removed.', 'info');
+    setAppliedCouponDiscount(0);
+    showToast('Coupon removed. Discount set to ₹0.', 'info');
   };
 
   // Wishlist
@@ -701,6 +942,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedCategory,
         searchQuery,
         setSearchQuery,
+        searchHistory,
+        addToSearchHistory,
+        removeFromSearchHistory,
+        clearSearchHistory,
         selectedSubcategory,
         setSelectedSubcategory,
         sortBy,
@@ -710,6 +955,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addProduct,
         updateProduct,
         deleteProduct,
+        reviews,
+        getProductReviews,
+        submitProductReview,
+        toggleReviewHelpful,
         cart,
         addToCart,
         updateCartQuantity,
@@ -756,6 +1005,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         cacheSizeMB,
         toast,
         showToast,
+        isOpenAnimationActive,
+        replayOpenAnimation,
+        dismissOpenAnimation,
+        coupons,
+        appliedCoupon,
       }}
     >
       {children}
