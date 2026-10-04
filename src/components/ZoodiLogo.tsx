@@ -97,7 +97,7 @@ export const ZoodiLogo: React.FC<ZoodiLogoProps> = ({
         </div>
 
         {/* ZOODI Wordmark */}
-        <div className="flex items-center justify-center font-display font-black tracking-wider leading-none text-4xl sm:text-5xl mt-3 sm:mt-4">
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2 font-display font-black leading-none text-4xl sm:text-5xl mt-3 sm:mt-4">
           <span style={{ color: '#00B4B6' }}>Z</span>
           <span style={{ color: '#FFB703' }}>O</span>
           <span style={{ color: '#FF7A30' }}>O</span>
@@ -137,7 +137,7 @@ export const ZoodiLogo: React.FC<ZoodiLogoProps> = ({
       {ZMark}
       <div className="flex flex-col justify-center">
         {/* ZOODI Wordmark with distinct letter colors */}
-        <div className="flex items-center font-display font-extrabold tracking-tight leading-none text-xl sm:text-2xl">
+        <div className="flex items-center gap-1 font-display font-extrabold leading-none text-xl sm:text-2xl">
           <span style={{ color: '#00B4B6' }}>Z</span>
           <span style={{ color: '#FFB703' }}>O</span>
           <span style={{ color: '#FF7A30' }}>O</span>
@@ -150,7 +150,7 @@ export const ZoodiLogo: React.FC<ZoodiLogoProps> = ({
             <span className="w-1.5 h-0.5 rounded-full" style={{ backgroundColor: '#00B4B6' }} />
             <span
               className={`px-1 ${
-                variant === 'white' ? 'text-slate-300' : 'text-slate-700 dark:text-slate-300'
+                variant === 'white' ? 'text-slate-300' : 'text-slate-700 dark:text-slate-200'
               }`}
             >
               {subtitle}

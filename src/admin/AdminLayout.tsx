@@ -65,7 +65,7 @@ export const AdminLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col lg:flex-row transition-colors selection:bg-pink-500 selection:text-white">
+    <div className="min-h-screen bg-gradient-to-br from-[#daf1f0] via-[#e4f5f4] to-[#edf7f7] dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col lg:flex-row transition-colors selection:bg-[#00B4B6] selection:text-white">
       {/* Sidebar Navigation */}
       <AdminSidebar />
 

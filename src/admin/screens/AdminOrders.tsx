@@ -143,10 +143,60 @@ export const AdminOrders: React.FC = () => {
 
       {/* Orders Table (Matching Screen 6 in mockup) */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto no-scrollbar">
-          <table className="w-full text-left text-xs">
+        {/* Mobile View (< sm) */}
+        <div className="divide-y divide-slate-100 dark:divide-slate-800 sm:hidden">
+          {filtered.map((order) => (
+            <div
+              key={order.id}
+              onClick={() => {
+                setSelectedOrderId(order.id);
+                setAdminTab('order_detail');
+              }}
+              className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors active:scale-[0.99]"
+            >
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <span className="font-mono font-bold text-xs text-slate-900 dark:text-white">
+                  {order.id}
+                </span>
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${
+                    order.status === 'Delivered'
+                      ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
+                      : order.status === 'Processing'
+                      ? 'bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-400'
+                      : order.status === 'Shipped'
+                      ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400'
+                      : 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400'
+                  }`}
+                >
+                  ● {order.status}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <div>
+                  <div className="font-bold text-slate-900 dark:text-white">
+                    {order.customer}
+                  </div>
+                  <div className="text-[10px] text-slate-400">{order.date}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-extrabold text-slate-900 dark:text-white">
+                    ₹{order.total.toLocaleString('en-IN')}
+                  </span>
+                  <span className="p-1 rounded-lg text-slate-400">
+                    <ArrowUpRight className="w-4 h-4" />
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop View (>= sm) */}
+        <div className="hidden sm:block overflow-x-auto no-scrollbar">
+          <table className="w-full text-left text-xs min-w-[550px]">
             <thead>
-              <tr className="bg-slate-50/60 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+              <tr className="bg-slate-50/60 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase tracking-wider text-[10px] whitespace-nowrap">
                 <th className="py-3 px-4">Order ID</th>
                 <th className="py-3 px-4">Customer</th>
                 <th className="py-3 px-4">Total</th>
@@ -154,7 +204,7 @@ export const AdminOrders: React.FC = () => {
                 <th className="py-3 px-4 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 whitespace-nowrap">
               {filtered.map((order) => (
                 <tr
                   key={order.id}

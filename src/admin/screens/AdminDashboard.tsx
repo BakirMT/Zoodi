@@ -217,58 +217,109 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Recent Orders Preview */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
+      <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xs space-y-3">
+        <div className="flex items-center justify-between pb-1">
           <h2 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">
             Recent Orders
           </h2>
           <button
             type="button"
             onClick={() => setAdminTab('orders')}
-            className="text-xs font-bold text-pink-600 dark:text-pink-400 hover:underline flex items-center gap-1"
+            className="text-xs font-bold text-pink-600 dark:text-pink-400 hover:underline flex items-center gap-1 active:scale-95 transition-transform"
           >
             <span>View All</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        <div className="overflow-x-auto no-scrollbar">
-          <table className="w-full text-left text-xs">
+        {/* Mobile View (< sm): Responsive touch-friendly card list */}
+        <div className="divide-y divide-slate-100 dark:divide-slate-800 sm:hidden">
+          {orders.slice(0, 4).map((o) => (
+            <div
+              key={o.id}
+              onClick={() => {
+                setSelectedOrderId(o.id);
+                setAdminTab('order_detail');
+              }}
+              className="py-3 flex items-center justify-between gap-3 active:bg-slate-50 dark:active:bg-slate-800/60 rounded-xl px-1.5 transition-colors cursor-pointer"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <span className="font-mono font-bold text-xs text-slate-900 dark:text-white truncate">
+                    {o.id}
+                  </span>
+                  <span
+                    className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${
+                      o.status === 'Delivered'
+                        ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
+                        : o.status === 'Shipped'
+                        ? 'bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-400'
+                        : o.status === 'Processing'
+                        ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400'
+                        : o.status === 'Out for Delivery'
+                        ? 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400'
+                        : 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400'
+                    }`}
+                  >
+                    {o.status}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                  <span className="truncate font-medium">Ayesha Khan</span>
+                  <span className="font-extrabold text-slate-900 dark:text-white shrink-0 ml-2">
+                    ₹{o.total.toLocaleString('en-IN')}
+                  </span>
+                </div>
+              </div>
+              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 shrink-0">
+                <Eye className="w-4 h-4" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Tablet / Desktop View (>= sm): Full table with proper spacing */}
+        <div className="hidden sm:block overflow-x-auto no-scrollbar">
+          <table className="w-full text-left text-xs min-w-[500px]">
             <thead>
-              <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-semibold">
-                <th className="pb-2.5">Order ID</th>
-                <th className="pb-2.5">Customer</th>
-                <th className="pb-2.5">Total</th>
-                <th className="pb-2.5">Status</th>
-                <th className="pb-2.5 text-right">Action</th>
+              <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-semibold whitespace-nowrap">
+                <th className="pb-2.5 pr-4">Order ID</th>
+                <th className="pb-2.5 px-4">Customer</th>
+                <th className="pb-2.5 px-4">Total</th>
+                <th className="pb-2.5 px-4">Status</th>
+                <th className="pb-2.5 pl-4 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 whitespace-nowrap">
               {orders.slice(0, 4).map((o) => (
                 <tr key={o.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                  <td className="py-3 font-mono font-bold text-slate-900 dark:text-white">
+                  <td className="py-3 pr-4 font-mono font-bold text-slate-900 dark:text-white">
                     {o.id}
                   </td>
-                  <td className="py-3 text-slate-700 dark:text-slate-300 font-medium">
+                  <td className="py-3 px-4 text-slate-700 dark:text-slate-300 font-medium">
                     Ayesha Khan
                   </td>
-                  <td className="py-3 font-extrabold text-slate-900 dark:text-white">
+                  <td className="py-3 px-4 font-extrabold text-slate-900 dark:text-white">
                     ₹{o.total.toLocaleString('en-IN')}
                   </td>
-                  <td className="py-3">
+                  <td className="py-3 px-4">
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${
                         o.status === 'Delivered'
                           ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400'
                           : o.status === 'Shipped'
                           ? 'bg-sky-100 dark:bg-sky-950/50 text-sky-700 dark:text-sky-400'
-                          : 'bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400'
+                          : o.status === 'Processing'
+                          ? 'bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400'
+                          : o.status === 'Out for Delivery'
+                          ? 'bg-indigo-100 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-400'
+                          : 'bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400'
                       }`}
                     >
                       {o.status}
                     </span>
                   </td>
-                  <td className="py-3 text-right">
+                  <td className="py-3 pl-4 text-right">
                     <button
                       type="button"
                       onClick={() => {
